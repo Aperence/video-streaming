@@ -51,6 +51,9 @@ stream_server_t *stream_server_new(char *ip_server, uint16_t port)
     memcpy(&stream_server->addr_udp, &addr_udp, sizeof(addr_udp));
     stream_server->addr_udp_len = sizeof(addr_udp);
     
+    // ignore if client quits
+    signal(SIGPIPE, SIG_IGN);
+    
     return stream_server;
 }
 
@@ -60,8 +63,9 @@ void stream_server_run(stream_server_t *server){
     struct sockaddr_storage client_addr;
     socklen_t client_len;
     
+    printf("Waiting client\n");
     int client = accept(server->socket, (struct sockaddr *) &client_addr, &client_len);
-
+    printf("Client accepted\n");
     ssize_t err;
 
     while (1){
@@ -76,4 +80,8 @@ void stream_server_run(stream_server_t *server){
             break;
         }
     }
+    
+    close(server->input_socket);
+    close(server->socket_udp);
+    close(server->socket);
 }
